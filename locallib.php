@@ -61,16 +61,24 @@ function get_data($token, $event_id)
 //collect all different groups from aloom
 function get_all_groups($result)
 {
+    global $DB;
+
+    //check value for aloom-connection in db
+    //echo "db-records";
+
     $all_groups = array();
     //Kurse finden = Kurs1 -> Gruppe I
     //$course_title_01 = "Terminauswahl Gruppe I";
-    $course_title_01 = "Managing Organizations";
+    //$course_title_01 = "Managing Organizations";
+    $course_title_01 = strval($DB->get_record('config', ['name' => 'local_importaloomuser_aloom_option_terminauswahl_gruppe_1'])->value);
 
     //$course_title_02 = "Terminauswahl Gruppe II";
-    $course_title_02 = "Managing a Business - a Function";
+    //$course_title_02 = "Managing a Business - a Function";
+    $course_title_02 = strval($DB->get_record('config', ['name' => 'local_importaloomuser_aloom_option_terminauswahl_gruppe_2'])->value);
 
     //$course_title_03 = "Terminauswahl Gruppe III";
-    $course_title_03 = "Managing a Team - a Project";
+    //$course_title_03 = "Managing a Team - a Project";
+    $course_title_03 = strval($DB->get_record('config', ['name' => 'local_importaloomuser_aloom_option_terminauswahl_gruppe_3'])->value);
 
 
 
@@ -88,10 +96,15 @@ function get_all_groups($result)
             //find group 1
             if (strpos($result->data->questions[$i]->label, $course_title_01) !== false) {
 
-            //if ($result->data->questions[$i]->label == $course_title_01) {
+                //if ($result->data->questions[$i]->label == $course_title_01) {
 
                 //get nbr of options
-                $nbr_options_course_title_01 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
+                //$nbr_options_course_title_01 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
+                $nbr_options_course_title_01 = 0;
+                if (isset($result->data->questions[$i]->options) && is_countable($result->data->questions[$i]->options)) {
+                    $nbr_options_course_title_01 = count($result->data->questions[$i]->options);
+                }
+
                 $nbr_questions = count((is_countable($result->data->questions) ? $result->data->questions : []));
 
                 //check options for sub-group-selection
@@ -110,13 +123,17 @@ function get_all_groups($result)
                         array_push($all_groupes_course_01, $group_info);
                     }
                 }
-            } 
+            }
             //elseif ($result->data->questions[$i]->label == $course_title_02) {
             elseif (strpos($result->data->questions[$i]->label, $course_title_02) !== false) {
-    
+
                 //get nbr of options
                 //$nbr_options_course_title_02 = count($result->data->questions[$i]->options);
-                $nbr_options_course_title_02 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
+                //$nbr_options_course_title_02 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
+                $nbr_options_course_title_02 = 0;
+                if (isset($result->data->questions[$i]->options) && is_countable($result->data->questions[$i]->options)) {
+                    $nbr_options_course_title_02 = count($result->data->questions[$i]->options);
+                }
 
                 //check options for sub-group-selection
                 for ($j = 0; $j < $nbr_options_course_title_02; $j++) {
@@ -134,12 +151,16 @@ function get_all_groups($result)
                         array_push($all_groupes_course_02, $group_info);
                     }
                 }
-            } 
+            }
             //elseif ($result->data->questions[$i]->label == $course_title_03) {
             elseif (strpos($result->data->questions[$i]->label, $course_title_03) !== false) {
 
                 //$nbr_options_course_title_03 = count($result->data->questions[$i]->options);
-                $nbr_options_course_title_03 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
+                //$nbr_options_course_title_03 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
+                $nbr_options_course_title_03 = 0;
+                if (isset($result->data->questions[$i]->options) && is_countable($result->data->questions[$i]->options)) {
+                    $nbr_options_course_title_03 = count($result->data->questions[$i]->options);
+                }
 
                 //check options for sub-group-selection
                 for ($j = 0; $j < $nbr_options_course_title_03; $j++) {
@@ -183,6 +204,7 @@ function collect_group_ids($arr)
 
 function user_csv_data($result, $all_groups)
 {
+    global $DB;
 
     $user_csv_data = "";
     $nbr_attendees = count((is_countable($result->data->attendees) ? $result->data->attendees : []));
@@ -220,15 +242,17 @@ function user_csv_data($result, $all_groups)
                             $item_found_in_g1 = true;
                             $group_name = $all_groupes_course_01[$j][0];
                             if ($all_groupes_course_01[$j][2] == "deutsch") {
-                                $moodle_kurs = "Formel P1: Organizations (DE)";
+                                //$moodle_kurs = "Formel P1: Organizations (DE)";
+                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course1_de_shortname'])->value);
                             } elseif ($all_groupes_course_01[$j][2] == "englisch") {
-                                $moodle_kurs = "Formel P1: Organizations (ENG)";
+                                //$moodle_kurs = "Formel P1: Organizations (ENG)";
+                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course1_eng_shortname'])->value);
                             }
                         }
                     }
                 } else if (in_array($user_choice, $group_ids_course_02)) {
 
-                   
+
                     for ($j = 0; $j < count((is_countable($all_groupes_course_02) ? $all_groupes_course_02 : [])); $j++) {
 
 
@@ -237,15 +261,17 @@ function user_csv_data($result, $all_groups)
 
                             $group_name = $all_groupes_course_02[$j][0];
                             if ($all_groupes_course_02[$j][2] == "deutsch") {
-                                $moodle_kurs = "Formel P2: Business/Function (DE)";
+                                //$moodle_kurs = "Formel P2: Business/Function (DE)";
+                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course2_de_shortname'])->value);
                             } elseif ($all_groupes_course_02[$j][2] == "englisch") {
-                                $moodle_kurs = "Formel P2: Business/Function (ENG)";
+                                //$moodle_kurs = "Formel P2: Business/Function (ENG)";
+                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course2_eng_shortname'])->value);
                             }
                         }
                     }
                 } else if (in_array($user_choice, $group_ids_course_03)) {
 
-                    
+
 
                     for ($j = 0; $j < count((is_countable($all_groupes_course_03) ? $all_groupes_course_03 : [])); $j++) {
                         if ($user_choice == $all_groupes_course_03[$j][1]) {
@@ -253,9 +279,11 @@ function user_csv_data($result, $all_groups)
 
                             $group_name = $all_groupes_course_03[$j][0];
                             if ($all_groupes_course_03[$j][2] == "deutsch") {
-                                $moodle_kurs = "Formel P3: Team/Project (DE)";
+                                //$moodle_kurs = "Formel P3: Team/Project (DE)";
+                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course3_de_shortname'])->value);
                             } elseif ($all_groupes_course_03[$j][2] == "englisch") {
-                                $moodle_kurs = "Formel P3: Team/Project (ENG)";
+                                //$moodle_kurs = "Formel P3: Team/Project (ENG)";
+                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course3_eng_shortname'])->value);
                             }
                         }
                     }
@@ -264,7 +292,6 @@ function user_csv_data($result, $all_groups)
                     $user_choice = "";
                     $group_name = "";
                 }
-                
             } else {
                 $proceed = false;
                 $user_choice = "";
@@ -276,7 +303,7 @@ function user_csv_data($result, $all_groups)
             $user_choice = "";
             $group_name = "";
         }
-       
+
         if ($proceed == true) {
             $removers = array(",", ".");
             $vorname = $result->data->attendees[$i]->answers[1]->value;
