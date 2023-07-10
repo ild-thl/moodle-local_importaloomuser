@@ -54,6 +54,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->dirroot . '/local/importaloomuser/config.php');
 
+
 class aloomuser_cron extends \core\task\scheduled_task
 {
 
@@ -71,12 +72,8 @@ class aloomuser_cron extends \core\task\scheduled_task
 
 
 function get_aloom_data($token, $event_id)
-{
-    //require_once($CFG->dirroot . '/local/importaloomuser/locallib.php');
-    echo "function get_aloom_data";
-
-    
-    global $DB;
+{    
+    global $DB, $cert;
 
     //check value for aloom-connection in db
     if ($DB->get_records('config')) {
@@ -100,6 +97,9 @@ function get_aloom_data($token, $event_id)
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // return the results instead of outputting it
     curl_setopt($curl, CURLOPT_URL, 'https://tms.aloom.de/eventapi/geteventfull?event_id=' . $event_id);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+    //insert local cert
+    curl_setopt($curl, CURLOPT_CAINFO, $cert);
 
 
     $data = curl_exec($curl);

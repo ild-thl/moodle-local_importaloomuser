@@ -38,7 +38,6 @@ require_once($CFG->dirroot . '/local/importaloomuser/config.php');
 require_once($CFG->dirroot . '/local/importaloomuser/locallib.php');
 
 
-
 $iid         = optional_param('iid', '', PARAM_INT);
 $previewrows = optional_param('previewrows', 10, PARAM_INT);
 
@@ -50,9 +49,12 @@ admin_externalpage_setup('tooluploaduser'); //Check, ob man berechtigt ist
 $returnurl = new moodle_url('/local/importaloomuser/index.php');
 $bulknurl  = new moodle_url('/admin/user/user_bulk.php');
 
+//use local CA-certificate
+//$cert = $CFG->dirroot . '/local/importaloomuser/cert/cacert.pem';
+
 global $DB;
 
-$result = get_data($token, $event_id);
+$result = get_data($token, $event_id, $cert);
 $all_group_data = get_all_groups($result);
 
 //prepare data for using csv-import-process
