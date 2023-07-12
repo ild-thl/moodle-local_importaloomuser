@@ -54,7 +54,7 @@ $bulknurl  = new moodle_url('/admin/user/user_bulk.php');
 
 global $DB;
 
-$result = get_data($token, $event_id, $cert);
+$result = get_data($token, $event_id);
 $all_group_data = get_all_groups($result);
 
 //prepare data for using csv-import-process

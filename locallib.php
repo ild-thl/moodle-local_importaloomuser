@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 function get_data($token, $event_id)
 {
     //echo "get_data <br/>"; 
-    global $DB;
+    global $DB, $cert;
 
     //check value for aloom-connection in db
     if ($DB->get_records('config')) {
@@ -50,6 +50,7 @@ function get_data($token, $event_id)
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // return the results instead of outputting it
     curl_setopt($curl, CURLOPT_URL, 'https://tms.aloom.de/eventapi/geteventfull?event_id=' . $event_id);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_CAINFO, $cert);
 
     $data = curl_exec($curl);
     $data = json_decode($data);
