@@ -232,6 +232,51 @@ function user_csv_data($result, $all_groups)
             if (array_key_exists(4, $result->data->attendees[$i]->answers)) {
                 $proceed = true;
                 $user_choice = $result->data->attendees[$i]->answers[4]->value->option_id;
+                
+                
+                //Problem: wenn user einen Termin storniert hat und das als Option in den Daten mitgeliefert wird, 
+                //dann ist answers[4]->value->option_id einer dieser Werte, somit ungültig für Gruppenwahl -> 
+                //dann nächste Antwort checken, ob dort ungültige Option angeklickt wurde answers[5]->value->option_id
+                //anschließend möglichen Wert answers[6]->value->option_id nutzen, egal ob korrekt oder nicht, 
+                //da dann entweder eingeschrieben wird oder nicht
+                
+                // Option "Termin stornieren" checken für alle Gruppe 1 - 3
+                if($user_choice == 582946 || $user_choice == 582947 || $user_choice == 582948){
+                    if (isset($result->data->attendees[$i]->answers[5])) {
+                        $user_choice = $result->data->attendees[$i]->answers[5]->value->option_id;
+                    } else {
+                        $user_choice = ""; 
+                    }
+                }
+                // Option "Bitte wählen Sie einen neuen Termin" checken für alle Gruppen 1-3
+                if($user_choice == 596675 || $user_choice == 596676 || $user_choice == 596677){
+                    if (isset($result->data->attendees[$i]->answers[5])) {
+                        $user_choice = $result->data->attendees[$i]->answers[5]->value->option_id;
+                    } else {
+                        $user_choice = ""; 
+                    }
+                }
+
+                // Option "Termin stornieren" checken für alle Gruppe 1 - 3 
+                if($user_choice == 582946 || $user_choice == 582947 || $user_choice == 582948){
+                    if (isset($result->data->attendees[$i]->answers[6])) {
+                        $user_choice = $result->data->attendees[$i]->answers[6]->value->option_id;
+                    } else {
+                        $user_choice = ""; 
+                    }
+                }
+
+                // Option "Bitte wählen Sie einen neuen Termin" checken für alle Gruppen 1-3
+                if($user_choice == 596675 || $user_choice == 596676 || $user_choice == 596677){
+                    if (isset($result->data->attendees[$i]->answers[6])) {
+                        $user_choice = $result->data->attendees[$i]->answers[6]->value->option_id;
+                    } else {
+                        $user_choice = ""; 
+                    }                }
+
+
+
+
                 if (in_array($user_choice, $group_ids_course_01)) {
 
 
@@ -251,7 +296,7 @@ function user_csv_data($result, $all_groups)
                             }
                         }
                     }
-                } else if (in_array($user_choice, $group_ids_course_02)) {
+                }  if (in_array($user_choice, $group_ids_course_02)) {
 
 
                     for ($j = 0; $j < count((is_countable($all_groupes_course_02) ? $all_groupes_course_02 : [])); $j++) {
@@ -270,7 +315,7 @@ function user_csv_data($result, $all_groups)
                             }
                         }
                     }
-                } else if (in_array($user_choice, $group_ids_course_03)) {
+                }  if (in_array($user_choice, $group_ids_course_03)) {
 
 
 
