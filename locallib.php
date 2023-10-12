@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
 
 function get_data($token, $event_id)
 {
-    //echo "get_data <br/>"; 
     global $DB, $cert;
 
     //check value for aloom-connection in db
@@ -53,6 +52,7 @@ function get_data($token, $event_id)
     curl_setopt($curl, CURLOPT_CAINFO, $cert);
 
     $data = curl_exec($curl);
+    //var_dump($data);
     $data = json_decode($data);
 
     return $data;
@@ -187,6 +187,7 @@ function get_all_groups($result)
     array_push($all_groups, $all_groupes_course_01);
     array_push($all_groups, $all_groupes_course_02);
     array_push($all_groups, $all_groupes_course_03);
+    //var_dump($all_groups);
     return $all_groups;
 }
 
@@ -199,6 +200,7 @@ function collect_group_ids($arr)
     for ($i = 0; $i < count((is_countable($arr) ? $arr : [])); $i++) {
         array_push($out, $arr[$i][1]);
     }
+    //var_dump($out);
     return $out;
 }
 
@@ -225,141 +227,166 @@ function user_csv_data($result, $all_groups)
     $item_found_in_g1 = false;
     $item_found_in_g2 = false;
     $item_found_in_g3 = false;
-    $user_choice = "";
+
 
     for ($i = 0; $i < $nbr_attendees; $i++) {
+        $user_choice = 0;
+        $tem_user_choice = 0;
         try {
-            if (array_key_exists(4, $result->data->attendees[$i]->answers)) {
-                $proceed = true;
-                $user_choice = $result->data->attendees[$i]->answers[4]->value->option_id;
-                
-                
-                //Problem: wenn user einen Termin storniert hat und das als Option in den Daten mitgeliefert wird, 
-                //dann ist answers[4]->value->option_id einer dieser Werte, somit ungültig für Gruppenwahl -> 
-                //dann nächste Antwort checken, ob dort ungültige Option angeklickt wurde answers[5]->value->option_id
-                //anschließend möglichen Wert answers[6]->value->option_id nutzen, egal ob korrekt oder nicht, 
-                //da dann entweder eingeschrieben wird oder nicht
-                
-                // Option "Termin stornieren" checken für alle Gruppe 1 - 3
-                if($user_choice == 582946 || $user_choice == 582947 || $user_choice == 582948){
-                    if (isset($result->data->attendees[$i]->answers[5])) {
-                        $user_choice = $result->data->attendees[$i]->answers[5]->value->option_id;
-                    } else {
-                        $user_choice = ""; 
+            //check if answers are in data
+            $nbr_answers = count((is_countable($result->data->attendees[$i]->answers) ? $result->data->attendees[$i]->answers : []));
+
+            //check for all answers
+            for ($k = 0; $k < $nbr_answers; $k++) {
+
+                if (isset($result->data->attendees[$i]->answers[$k]->value->question_id)) {
+                    //if question_id is in option for group1
+                    if ($result->data->attendees[$i]->answers[$k]->value->question_id == 706587) {
+                        $proceed = true;
+                        $tem_user_choice = $result->data->attendees[$i]->answers[$k]->value->option_id;
                     }
-                }
-                // Option "Bitte wählen Sie einen neuen Termin" checken für alle Gruppen 1-3
-                if($user_choice == 596675 || $user_choice == 596676 || $user_choice == 596677){
-                    if (isset($result->data->attendees[$i]->answers[5])) {
-                        $user_choice = $result->data->attendees[$i]->answers[5]->value->option_id;
-                    } else {
-                        $user_choice = ""; 
+
+                    //if question_id is in option for group2
+                    elseif ($result->data->attendees[$i]->answers[$k]->value->question_id == 706592) {
+                        $proceed = true;
+                        $tem_user_choice = $result->data->attendees[$i]->answers[$k]->value->option_id;
                     }
-                }
 
-                // Option "Termin stornieren" checken für alle Gruppe 1 - 3 
-                if($user_choice == 582946 || $user_choice == 582947 || $user_choice == 582948){
-                    if (isset($result->data->attendees[$i]->answers[6])) {
-                        $user_choice = $result->data->attendees[$i]->answers[6]->value->option_id;
-                    } else {
-                        $user_choice = ""; 
+                    //if question_id is in option for group3
+                    elseif ($result->data->attendees[$i]->answers[$k]->value->question_id == 709655) {
+                        $proceed = true;
+                        $tem_user_choice = $result->data->attendees[$i]->answers[$k]->value->option_id;
                     }
-                }
 
-                // Option "Bitte wählen Sie einen neuen Termin" checken für alle Gruppen 1-3
-                if($user_choice == 596675 || $user_choice == 596676 || $user_choice == 596677){
-                    if (isset($result->data->attendees[$i]->answers[6])) {
-                        $user_choice = $result->data->attendees[$i]->answers[6]->value->option_id;
-                    } else {
-                        $user_choice = ""; 
-                    }                }
+                    //remove answers if choice is "termin stornieren"
+                    if ($tem_user_choice == 582946 || $tem_user_choice == 582947 || $tem_user_choice == 582948) {
+                        $tem_user_choice = 0;
+                    }
+                    //remove answers if choice is "Bitte wählen Sie einen neuen Termin"
+                    if ($tem_user_choice == 596675 || $tem_user_choice == 596676 || $tem_user_choice == 596677) {
+                        $tem_user_choice = 0;
+                    }
+
+                    //use the answer that is valid for a group, exclude "no answer", "termin stornieren" and "Bitte wählen Sie einen neuen Termin"
+                    //Problem: there could be several answers in different groups
+                    //eg. group1: "termin stornieren" and group2: "Termin am x.x.xxxx"
+                    //use the choice that is valid = highest value in answers
+                    if ($tem_user_choice > $user_choice) {
+                        $user_choice = $tem_user_choice;
+                    } elseif ($tem_user_choice <= $user_choice) {
+                        //$user_choice = $result->data->attendees[$i]->answers[$k]->value->option_id;
+
+                    }
 
 
+                    //check if user_choice is in group_ids of course1
+                    if (in_array($user_choice, $group_ids_course_01)) {
+
+                        for ($j = 0; $j < count((is_countable($all_groupes_course_01) ? $all_groupes_course_01 : [])); $j++) {
 
 
-                if (in_array($user_choice, $group_ids_course_01)) {
-
-
-
-                    for ($j = 0; $j < count((is_countable($all_groupes_course_01) ? $all_groupes_course_01 : [])); $j++) {
-
-
-                        if ($user_choice == $all_groupes_course_01[$j][1]) {
-                            $item_found_in_g1 = true;
-                            $group_name = $all_groupes_course_01[$j][0];
-                            if ($all_groupes_course_01[$j][2] == "deutsch") {
-                                //$moodle_kurs = "Formel P1: Organizations (DE)";
-                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course1_de_shortname'])->value);
-                            } elseif ($all_groupes_course_01[$j][2] == "englisch") {
-                                //$moodle_kurs = "Formel P1: Organizations (ENG)";
-                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course1_eng_shortname'])->value);
+                            if ($user_choice == $all_groupes_course_01[$j][1]) {
+                                $item_found_in_g1 = true;
+                                $group_name = $all_groupes_course_01[$j][0];
+                                if ($all_groupes_course_01[$j][2] == "deutsch") {
+                                    //$moodle_kurs = "Formel P1: Organizations (DE)";
+                                    $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course1_de_shortname'])->value);
+                                } elseif ($all_groupes_course_01[$j][2] == "englisch") {
+                                    //$moodle_kurs = "Formel P1: Organizations (ENG)";
+                                    $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course1_eng_shortname'])->value);
+                                }
                             }
                         }
                     }
-                }  if (in_array($user_choice, $group_ids_course_02)) {
+                    //check if user_choice is in group_ids of course2
+
+                    elseif (in_array($user_choice, $group_ids_course_02)) {
 
 
-                    for ($j = 0; $j < count((is_countable($all_groupes_course_02) ? $all_groupes_course_02 : [])); $j++) {
+                        for ($j = 0; $j < count((is_countable($all_groupes_course_02) ? $all_groupes_course_02 : [])); $j++) {
 
 
-                        if ($user_choice == $all_groupes_course_02[$j][1]) {
-                            $item_found_in_g2 = true;
+                            if ($user_choice == $all_groupes_course_02[$j][1]) {
+                                $item_found_in_g2 = true;
 
-                            $group_name = $all_groupes_course_02[$j][0];
-                            if ($all_groupes_course_02[$j][2] == "deutsch") {
-                                //$moodle_kurs = "Formel P2: Business/Function (DE)";
-                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course2_de_shortname'])->value);
-                            } elseif ($all_groupes_course_02[$j][2] == "englisch") {
-                                //$moodle_kurs = "Formel P2: Business/Function (ENG)";
-                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course2_eng_shortname'])->value);
+                                $group_name = $all_groupes_course_02[$j][0];
+                                if ($all_groupes_course_02[$j][2] == "deutsch") {
+                                    //$moodle_kurs = "Formel P2: Business/Function (DE)";
+                                    $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course2_de_shortname'])->value);
+                                } elseif ($all_groupes_course_02[$j][2] == "englisch") {
+                                    //$moodle_kurs = "Formel P2: Business/Function (ENG)";
+                                    $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course2_eng_shortname'])->value);
+                                }
                             }
                         }
                     }
-                }  if (in_array($user_choice, $group_ids_course_03)) {
+
+                    //check if user_choice is in group_ids of course3
+                    elseif (in_array($user_choice, $group_ids_course_03)) {
 
 
 
-                    for ($j = 0; $j < count((is_countable($all_groupes_course_03) ? $all_groupes_course_03 : [])); $j++) {
-                        if ($user_choice == $all_groupes_course_03[$j][1]) {
-                            $item_found_in_g3 = true;
+                        for ($j = 0; $j < count((is_countable($all_groupes_course_03) ? $all_groupes_course_03 : [])); $j++) {
+                            if ($user_choice == $all_groupes_course_03[$j][1]) {
+                                $item_found_in_g3 = true;
 
-                            $group_name = $all_groupes_course_03[$j][0];
-                            if ($all_groupes_course_03[$j][2] == "deutsch") {
-                                //$moodle_kurs = "Formel P3: Team/Project (DE)";
-                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course3_de_shortname'])->value);
-                            } elseif ($all_groupes_course_03[$j][2] == "englisch") {
-                                //$moodle_kurs = "Formel P3: Team/Project (ENG)";
-                                $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course3_eng_shortname'])->value);
+                                $group_name = $all_groupes_course_03[$j][0];
+                                if ($all_groupes_course_03[$j][2] == "deutsch") {
+                                    //$moodle_kurs = "Formel P3: Team/Project (DE)";
+                                    $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course3_de_shortname'])->value);
+                                } elseif ($all_groupes_course_03[$j][2] == "englisch") {
+                                    //$moodle_kurs = "Formel P3: Team/Project (ENG)";
+                                    $moodle_kurs = strval($DB->get_record('config', ['name' => 'local_importaloomuser_course3_eng_shortname'])->value);
+                                }
                             }
                         }
+                    } 
+                    //else: no valid choice -> data will not be added to csv_data
+                    else {
+                        $proceed = false;
+                        $user_choice = 0;
+                        $group_name = "";
                     }
-                } else {
-                    $proceed = false;
-                    $user_choice = "";
-                    $group_name = "";
                 }
-            } else {
-                $proceed = false;
-                $user_choice = "";
-                $group_name = "";
             }
         } catch (Exception $e) {
             echo "keine daten; ";
             $proceed = false;
-            $user_choice = "";
+            $user_choice = 0;
             $group_name = "";
         }
 
         if ($proceed == true) {
             $removers = array(",", ".");
-            $vorname = $result->data->attendees[$i]->answers[1]->value;
-            $vorname = str_replace($removers, "", $vorname);
-            $nachname = $result->data->attendees[$i]->answers[0]->value;
-            $nachname = str_replace($removers, "", $nachname);
-            $email = trim($result->data->attendees[$i]->answers[2]->value, ",");
+            //check if name is in data
+
+            $nbr_answers = count((is_countable($result->data->attendees[$i]->answers) ? $result->data->attendees[$i]->answers : []));
+
+            for ($l = 0; $l < $nbr_answers; $l++) {
+
+
+                if (isset($result->data->attendees[$i]->answers[$l]->question_id)) {
+                    if ($result->data->attendees[$i]->answers[$l]->question_id == 706576) {
+                        $vorname = $result->data->attendees[$i]->answers[$l]->value;
+                        $vorname = str_replace($removers, "", $vorname);
+                    }
+                    if ($result->data->attendees[$i]->answers[$l]->question_id == 706575) {
+                        $nachname = $result->data->attendees[$i]->answers[$l]->value;
+                        $nachname = str_replace($removers, "", $nachname);
+                    }
+                    if ($result->data->attendees[$i]->answers[$l]->question_id == 706578) {
+                        $email = trim($result->data->attendees[$i]->answers[$l]->value, ",");
+                    }
+                }
+            }
+
+
+
+
             //dummy adress
             //$emailtest = "aloomnoreply@noreply.noreply" . $i;
             $username = strtolower($email);
+
             $user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $email . "," .  "," .  "," . $moodle_kurs . "," . $group_name;
             //echo "user csv data : " . $user_csv_data;
             //$user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $emailtest . "," .  "," .  "," . $moodle_kurs . "," . $group_name;
