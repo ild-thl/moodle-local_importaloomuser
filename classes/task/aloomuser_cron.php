@@ -64,14 +64,14 @@ class aloomuser_cron extends \core\task\scheduled_task
     }
 
 
-    public function execute($al_token = "", $al_event_id = "")
+    public function execute()
     {
-        start_process(get_aloom_data($al_token, $al_event_id));
+        start_process(get_aloom_data());
     }
 }
 
 
-function get_aloom_data($token, $event_id)
+function get_aloom_data()
 {    
     global $DB, $cert;
 
@@ -82,10 +82,9 @@ function get_aloom_data($token, $event_id)
 
         $event_id = strval($DB->get_record('config', ['name' => 'local_importaloomuser_event_id'])->value);
     }
-    //use fallback from config.php
     else {
-        $token = $token;
-        $event_id = $event_id;
+        echo("No data received using provided id and token"); 
+        die(); 
     }
     
 

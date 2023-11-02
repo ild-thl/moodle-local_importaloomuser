@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-function get_data($token, $event_id)
+function get_data()
 {
     global $DB, $cert;
 
@@ -36,10 +36,9 @@ function get_data($token, $event_id)
         $token = strval($DB->get_record('config', ['name' => 'local_importaloomuserdb_token'])->value);
         $event_id = strval($DB->get_record('config', ['name' => 'local_importaloomuser_event_id'])->value);
     }
-    //use fallback from config.php
     else {
-        $token = $token;
-        $event_id = $event_id;
+        echo("No data received using provided id and token"); 
+        die(); 
     }
 
     $headers = array();
