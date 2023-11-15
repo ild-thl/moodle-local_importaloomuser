@@ -58,7 +58,7 @@ $result = get_data();
 $all_group_data = get_all_groups($result);
 
 //prepare data for using csv-import-process
-$table_header = "username,firstname,lastname,email,idnumber,profile_field_unternehmen,course1,group1";
+$table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";
 $csv_data = $table_header;
 
 

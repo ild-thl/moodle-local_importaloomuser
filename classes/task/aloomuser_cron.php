@@ -106,7 +106,7 @@ function get_aloom_data()
     //$result = get_data($token, $event_id);
     $result = $data; 
     $all_group_data = get_all_groups($result);
-    $table_header = "username,firstname,lastname,email,idnumber,profile_field_unternehmen,course1,group1";
+    $table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";
     $csv_data = $table_header;
     $csv_data = $csv_data . user_csv_data($result, $all_group_data);
     return $csv_data;

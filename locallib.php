@@ -35,10 +35,9 @@ function get_data()
         //echo "db-records";
         $token = strval($DB->get_record('config', ['name' => 'local_importaloomuserdb_token'])->value);
         $event_id = strval($DB->get_record('config', ['name' => 'local_importaloomuser_event_id'])->value);
-    }
-    else {
-        echo("No data received using provided id and token"); 
-        die(); 
+    } else {
+        echo ("No data received using provided id and token");
+        die();
     }
 
     $headers = array();
@@ -339,7 +338,7 @@ function user_csv_data($result, $all_groups)
                                 }
                             }
                         }
-                    } 
+                    }
                     //else: no valid choice -> data will not be added to csv_data
                     else {
                         $proceed = false;
@@ -385,10 +384,10 @@ function user_csv_data($result, $all_groups)
             //dummy adress
             //$emailtest = "aloomnoreply@noreply.noreply" . $i;
             $username = strtolower($email);
-
-            $user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $email . "," .  "," .  "," . $moodle_kurs . "," . $group_name;
-            //echo "user csv data : " . $user_csv_data;
-            //$user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $emailtest . "," .  "," .  "," . $moodle_kurs . "," . $group_name;
+            $maildata = " ";
+            $maildata = substr(strrchr($username, "@"), 1);
+            //$table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";
+            $user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $email . "," .  $maildata .  "," . $moodle_kurs . "," . $group_name . "," . $maildata;
         }
     }
     return $user_csv_data;
