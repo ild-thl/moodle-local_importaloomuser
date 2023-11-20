@@ -29,12 +29,11 @@
  */
 
 require_once('../../config.php');
-require('config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
 require_once($CFG->dirroot . '/local/importaloomuser/user_form.php');
-require_once($CFG->dirroot . '/local/importaloomuser/config.php');
+//require_once($CFG->dirroot . '/local/importaloomuser/config.php');
 require_once($CFG->dirroot . '/local/importaloomuser/locallib.php');
 
 
@@ -50,7 +49,7 @@ $returnurl = new moodle_url('/local/importaloomuser/index.php');
 $bulknurl  = new moodle_url('/admin/user/user_bulk.php');
 
 //use local CA-certificate
-//$cert = $CFG->dirroot . '/local/importaloomuser/cert/cacert.pem';
+$cert = $CFG->dirroot . '/local/importaloomuser/cert/cacert.pem';
 
 global $DB;
 
