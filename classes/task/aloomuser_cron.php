@@ -44,8 +44,7 @@ require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->dirroot . '/local/importaloomuser/locallib.php');
 
 //use local CA-certificate
-$cert= $CFG->dirroot . '/local/importaloomuser/cert/cacert.pem';
-
+ 
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from a Moodle page.
 }
@@ -72,13 +71,14 @@ class aloomuser_cron extends \core\task\scheduled_task
 
 function get_aloom_data()
 {    
-    global $DB, $cert;
+    global $DB, $CFG;
     //check value for aloom-connection in db
     if ($DB->get_records('config')) {
         echo "db-records";
         $token = strval($DB->get_record('config', ['name' => 'local_importaloomuserdb_token'])->value);
 
         $event_id = strval($DB->get_record('config', ['name' => 'local_importaloomuser_event_id'])->value);
+
     }
     else {
         echo("No data received using provided id and token"); 
@@ -95,7 +95,9 @@ function get_aloom_data()
     curl_setopt($curl, CURLOPT_URL, 'https://tms.aloom.de/eventapi/geteventfull?event_id=' . $event_id);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
-    //insert local cert
+    //use local cert
+    $cert = $CFG->dirroot . strval($DB->get_record('config', ['name' => 'local_importaloomuser_certpath'])->value);
+
     curl_setopt($curl, CURLOPT_CAINFO, $cert);
 
 
@@ -103,7 +105,6 @@ function get_aloom_data()
     $data = json_decode($data);
 
 
-    //$result = get_data($token, $event_id);
     $result = $data; 
     $all_group_data = get_all_groups($result);
     $table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";

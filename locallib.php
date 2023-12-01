@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 function get_data()
 {
-    global $DB, $cert;
+    global $DB, $CFG;
 
     //check value for aloom-connection in db
     if ($DB->get_records('config')) {
@@ -47,6 +47,10 @@ function get_data()
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // return the results instead of outputting it
     curl_setopt($curl, CURLOPT_URL, 'https://tms.aloom.de/eventapi/geteventfull?event_id=' . $event_id);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+    //use local ca-certificate
+    $cert = $CFG->dirroot . strval($DB->get_record('config', ['name' => 'local_importaloomuser_certpath'])->value);
+
     curl_setopt($curl, CURLOPT_CAINFO, $cert);
 
     $data = curl_exec($curl);

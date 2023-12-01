@@ -79,6 +79,25 @@ if ( $hassiteconfig ){
 	$settings->add( new admin_setting_configtext(
 		
 		// This is the reference you will use to your configuration
+		'local_importaloomuser_certpath',
+	
+		// This is the friendly title for the config, which will be displayed
+		'Pfad zum lokalen CA-Zertifikat',
+	
+		// This is helper text for this config field
+		'Pfad zum lokalen CA-Zertifikat',
+	
+		// This is the default value
+		'/local/importaloomuser/cert/cacert.pem',
+	
+		// This is the type of Parameter this config is
+		PARAM_TEXT
+	
+	) );
+
+	$settings->add( new admin_setting_configtext(
+		
+		// This is the reference you will use to your configuration
 		'local_importaloomuser_aloom_option_terminauswahl_gruppe_1',
 	
 		// This is the friendly title for the config, which will be displayed

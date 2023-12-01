@@ -49,7 +49,7 @@ $returnurl = new moodle_url('/local/importaloomuser/index.php');
 $bulknurl  = new moodle_url('/admin/user/user_bulk.php');
 
 //use local CA-certificate
-$cert = $CFG->dirroot . '/local/importaloomuser/cert/cacert.pem';
+$cert = strval($DB->get_record('config', ['name' => 'local_importaloomuser_certpath'])->value);
 
 global $DB;
 
