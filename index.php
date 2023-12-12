@@ -33,7 +33,6 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
 require_once($CFG->dirroot . '/local/importaloomuser/user_form.php');
-//require_once($CFG->dirroot . '/local/importaloomuser/config.php');
 require_once($CFG->dirroot . '/local/importaloomuser/locallib.php');
 
 
@@ -57,12 +56,19 @@ $result = get_data();
 $all_group_data = get_all_groups($result);
 
 //prepare data for using csv-import-process
-$table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";
+$table_header = "username,firstname,lastname,email,profile_field_unternehmen,profile_field_userimport,course1,group1,cohort1";
 $csv_data = $table_header;
 
 
 
-$csv_data = $csv_data . user_csv_data($result, $all_group_data); 
+/**
+ * Appends the CSV data generated from the given result and group data to the existing CSV data.
+ *
+ * @param mixed $result The result data.
+ * @param mixed $all_group_data The group data.
+ * @return string The updated CSV data.
+ */
+$csv_data = $csv_data . user_csv_data($result, $all_group_data);
 
 //back to normal csv-process, see admin/tool/uploaduser
 if (empty($iid)) {

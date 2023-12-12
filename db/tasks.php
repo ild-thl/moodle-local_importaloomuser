@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Task definition for block_rss_client.
+ * Task definition for aloomuser sync.
  * @copyright   2023 ILD TH Lübeck <dev.ild@th-luebeck.de>
  * @package   local_importaloomuser
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

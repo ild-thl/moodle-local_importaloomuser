@@ -24,7 +24,7 @@
  */
 
 
- //Form wird angepasst für Cronjob-
+ //Form cusomized for Cronjob-
 
 defined('MOODLE_INTERNAL') || die();
 

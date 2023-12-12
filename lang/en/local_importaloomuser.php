@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['aloomuser_profilfield_cron'] = 'aloom user profilfield syncronisation';
 $string['aloomuser_cron'] = 'aloom user syncronisation';
 $string['allowdeletes'] = 'Allow deletes';
 $string['allowrenames'] = 'Allow renames';

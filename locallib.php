@@ -26,13 +26,27 @@
 defined('MOODLE_INTERNAL') || die();
 
 
+/**
+ * Retrieves data from the Aloom API.
+ *
+ * This function retrieves data from the Aloom API by making a request to the specified event ID.
+ * It first checks if the necessary configuration values are present in the database.
+ * If the values are found, it retrieves the token and event ID from the database.
+ * It then constructs the necessary headers for the API request and initializes a cURL session.
+ * The function sets the necessary cURL options, including the URL and headers.
+ * It also sets the local CA certificate path for secure communication.
+ * The function executes the cURL request and retrieves the response data.
+ * The response data is then decoded from JSON format into a PHP object.
+ * Finally, the function returns the retrieved data.
+ *
+ * @return object The retrieved data from the Aloom API.
+ */
 function get_data()
 {
     global $DB, $CFG;
 
     //check value for aloom-connection in db
     if ($DB->get_records('config')) {
-        //echo "db-records";
         $token = strval($DB->get_record('config', ['name' => 'local_importaloomuserdb_token'])->value);
         $event_id = strval($DB->get_record('config', ['name' => 'local_importaloomuser_event_id'])->value);
     } else {
@@ -44,7 +58,7 @@ function get_data()
     $headers[] = 'X-Auth-Token: ' . $token;
 
     $curl = curl_init();
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); // return the results instead of outputting it
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($curl, CURLOPT_URL, 'https://tms.aloom.de/eventapi/geteventfull?event_id=' . $event_id);
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
 
@@ -54,23 +68,27 @@ function get_data()
     curl_setopt($curl, CURLOPT_CAINFO, $cert);
 
     $data = curl_exec($curl);
-    //var_dump($data);
     $data = json_decode($data);
 
     return $data;
 }
 
 
-//collect all different groups from aloom
+
+/**
+ * Retrieves all groups from the given result object.
+ * collect all different groups from aloom
+ * return array with all groups for different courses
+ * 
+ * @param object $result The result object containing the groups.
+ * @return array An array of all groups, organized by courses.
+ */
 function get_all_groups($result)
 {
     global $DB;
 
-    //check value for aloom-connection in db
-    //echo "db-records";
-
     $all_groups = array();
-    //Kurse finden = Kurs1 -> Gruppe I
+    //find courses = Kurs1 -> Gruppe I
     //$course_title_01 = "Terminauswahl Gruppe I";
     //$course_title_01 = "Managing Organizations";
     $course_title_01 = strval($DB->get_record('config', ['name' => 'local_importaloomuser_aloom_option_terminauswahl_gruppe_1'])->value);
@@ -85,8 +103,15 @@ function get_all_groups($result)
 
 
 
-    //geschachtelte Arrays mit struktur [[gruppenname 1,option_id, sprache], [gruppenname 2, ...]]
-    //[["Gruppe III-2","560920","deutsch"],[...]]
+    /**
+     * This code defines an array structure with nested arrays.
+     * Each nested array represents a group and contains three elements:
+     * - Group name
+     * - Option ID
+     * - Language
+     * 
+     * Example: [["Gruppe III-2","560920","deutsch"],[...]]
+     */
     $all_groupes_course_01 = array();
     $all_groupes_course_02 = array();
     $all_groupes_course_03 = array();
@@ -94,15 +119,25 @@ function get_all_groups($result)
 
     $nbr_questions = count($result->data->questions);
 
+    /**
+     * This code block iterates through the questions in the $result object and extracts information about course sub-groups.
+     * It checks each question's label to determine the course title and then processes the options to find the sub-group information.
+     * The extracted sub-group information is stored in separate arrays based on the course title.
+     *
+     * @param object $result The object containing the questions and options.
+     * @param string $course_title_01 The title of the first course.
+     * @param string $course_title_02 The title of the second course.
+     * @param string $course_title_03 The title of the third course.
+     * @param array $all_groupes_course_01 An array to store the sub-group information for the first course.
+     * @param array $all_groupes_course_02 An array to store the sub-group information for the second course.
+     * @param array $all_groupes_course_03 An array to store the sub-group information for the third course.
+     * @param int $nbr_questions The total number of questions in the $result object.
+     */
     for ($i = 0; $i < $nbr_questions; $i++) {
         if (isset($result->data->questions[$i]->label)) {
             //find group 1
             if (strpos($result->data->questions[$i]->label, $course_title_01) !== false) {
 
-                //if ($result->data->questions[$i]->label == $course_title_01) {
-
-                //get nbr of options
-                //$nbr_options_course_title_01 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
                 $nbr_options_course_title_01 = 0;
                 if (isset($result->data->questions[$i]->options) && is_countable($result->data->questions[$i]->options)) {
                     $nbr_options_course_title_01 = count($result->data->questions[$i]->options);
@@ -126,13 +161,8 @@ function get_all_groups($result)
                         array_push($all_groupes_course_01, $group_info);
                     }
                 }
-            }
-            //elseif ($result->data->questions[$i]->label == $course_title_02) {
-            elseif (strpos($result->data->questions[$i]->label, $course_title_02) !== false) {
+            } elseif (strpos($result->data->questions[$i]->label, $course_title_02) !== false) {
 
-                //get nbr of options
-                //$nbr_options_course_title_02 = count($result->data->questions[$i]->options);
-                //$nbr_options_course_title_02 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
                 $nbr_options_course_title_02 = 0;
                 if (isset($result->data->questions[$i]->options) && is_countable($result->data->questions[$i]->options)) {
                     $nbr_options_course_title_02 = count($result->data->questions[$i]->options);
@@ -154,12 +184,8 @@ function get_all_groups($result)
                         array_push($all_groupes_course_02, $group_info);
                     }
                 }
-            }
-            //elseif ($result->data->questions[$i]->label == $course_title_03) {
-            elseif (strpos($result->data->questions[$i]->label, $course_title_03) !== false) {
+            } elseif (strpos($result->data->questions[$i]->label, $course_title_03) !== false) {
 
-                //$nbr_options_course_title_03 = count($result->data->questions[$i]->options);
-                //$nbr_options_course_title_03 = count((is_countable($result->data->questions[$i]->options) ? $result->data->questions[$i]->options : []));
                 $nbr_options_course_title_03 = 0;
                 if (isset($result->data->questions[$i]->options) && is_countable($result->data->questions[$i]->options)) {
                     $nbr_options_course_title_03 = count($result->data->questions[$i]->options);
@@ -172,30 +198,40 @@ function get_all_groups($result)
                         $group_info = array();
 
                         $group_name = mb_substr($result->data->questions[$i]->options[$j]->label, 0, 13);
-                        //echo "group name: " . $group_name;
                         $group_id = strval($result->data->questions[$i]->options[$j]->option_conditions[0]->option_id);
-                        //echo "group id: " . $group_id;
                         $group_language = strval($result->data->questions[$i]->options[$j]->option_conditions[1]->param);
-                        //echo "group language: " . $group_language;
-                        //add data to group array
                         array_push($group_info, $group_name, $group_id, $group_language);
-                        //add group array to course array
                         array_push($all_groupes_course_03, $group_info);
                     }
                 }
             }
         }
     }
+    /**
+     * Adds the given group arrays to the $all_groups array and returns it.
+     *
+     * @param array $all_groups The array to which the group arrays will be added.
+     * @param array $all_groupes_course_01 The group array for course 01.
+     * @param array $all_groupes_course_02 The group array for course 02.
+     * @param array $all_groupes_course_03 The group array for course 03.
+     * @return array The updated $all_groups array.
+     */
     array_push($all_groups, $all_groupes_course_01);
     array_push($all_groups, $all_groupes_course_02);
     array_push($all_groups, $all_groupes_course_03);
-    //var_dump($all_groups);
     return $all_groups;
 }
 
 
 
-//return array with all ids belonging to one group = course
+
+/**
+ * Collects the group IDs from a given array.
+ * return array with all ids belonging to one group = course
+ *
+ * @param array $arr The input array.
+ * @return array The array containing the group IDs.
+ */
 function collect_group_ids($arr)
 {
     $out = array();
@@ -207,6 +243,14 @@ function collect_group_ids($arr)
 }
 
 
+/**
+ * Generates CSV data for users based on the provided result and group information.
+ * Also checks if the user already exists and updates the user profile data.
+ *
+ * @param object $result The result object containing attendee data.
+ * @param array $all_groups An array of all groups for different courses.
+ * @return string The generated CSV data for users.
+ */
 function user_csv_data($result, $all_groups)
 {
     global $DB;
@@ -223,14 +267,25 @@ function user_csv_data($result, $all_groups)
     $group_ids_course_03 = collect_group_ids($all_groupes_course_03);
 
     $proceed = false;
-    $my_group = "";
     $group_name = "";
-    $item_found_in_g0 = false;
-    $item_found_in_g1 = false;
-    $item_found_in_g2 = false;
-    $item_found_in_g3 = false;
 
 
+    /**
+     * This code block iterates through the attendees' answers and determines the user's choice based on the question ID and option ID.
+     * It then checks if the user's choice is valid for a specific group and retrieves the corresponding Moodle course shortname.
+     * The code also handles cases where the user's choice is not valid or if there are no answers available.
+     *
+     * @param int $nbr_attendees The number of attendees.
+     * @param object $result The result object containing the attendees' answers.
+     * @param array $group_ids_course_01 The group IDs for course 1.
+     * @param array $group_ids_course_02 The group IDs for course 2.
+     * @param array $group_ids_course_03 The group IDs for course 3.
+     * @param array $all_groupes_course_01 The details of all groups for course 1.
+     * @param array $all_groupes_course_02 The details of all groups for course 2.
+     * @param array $all_groupes_course_03 The details of all groups for course 3.
+     * @param object $DB The Moodle database object.
+     * @return void
+     */
     for ($i = 0; $i < $nbr_attendees; $i++) {
         $user_choice = 0;
         $tem_user_choice = 0;
@@ -275,11 +330,7 @@ function user_csv_data($result, $all_groups)
                     //use the choice that is valid = highest value in answers
                     if ($tem_user_choice > $user_choice) {
                         $user_choice = $tem_user_choice;
-                    } elseif ($tem_user_choice <= $user_choice) {
-                        //$user_choice = $result->data->attendees[$i]->answers[$k]->value->option_id;
-
                     }
-
 
                     //check if user_choice is in group_ids of course1
                     if (in_array($user_choice, $group_ids_course_01)) {
@@ -358,6 +409,16 @@ function user_csv_data($result, $all_groups)
             $group_name = "";
         }
 
+        /**
+         * This code block processes attendee data and updates user profile information if the user already exists.
+         * It performs the following tasks:
+         * 1. Extracts attendee information such as first name, last name, and email from the result data.
+         * 2. Removes any commas and periods from the extracted names.
+         * 3. Converts the email address to lowercase and extracts the domain name.
+         * 4. Checks if a user with the same email already exists in the database.
+         * 5. If the user exists, updates the user's profile data for the "userimport" and "unternehmen" fields.
+         * 6. Appends the user's information to a CSV string.
+         */
         if ($proceed == true) {
             $removers = array(",", ".");
             //check if name is in data
@@ -382,16 +443,44 @@ function user_csv_data($result, $all_groups)
                 }
             }
 
-
-
-
-            //dummy adress
-            //$emailtest = "aloomnoreply@noreply.noreply" . $i;
             $username = strtolower($email);
             $maildata = " ";
             $maildata = substr(strrchr($username, "@"), 1);
-            //$table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";
-            $user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $email . "," .  $maildata .  "," . $moodle_kurs . "," . $group_name . "," . $maildata;
+
+            //update user profil data if user already exists
+            global $DB;
+            $user = $DB->get_record('user', array('email' => $email));
+            if ($user) {
+                //update user profil data for userimport
+                $infoFieldNameImport = 'userimport';
+                $newValue = "automatisch";
+                
+                //insert userimport data in user profile field "userimport" in db
+                $DB->execute(
+                    "
+                    INSERT INTO {user_info_data} (userid, fieldid, data)
+                    SELECT ?, uif.id, ?
+                    FROM {user_info_field} uif
+                    WHERE uif.name LIKE ?
+                    ON DUPLICATE KEY UPDATE data = ?",
+                    array($user->id, $newValue, $infoFieldNameImport, $newValue)
+                );
+
+                $infoFieldNameEnterprise = 'unternehmen';
+                $newData = $maildata;
+                //insert mail-domain data in user profile field "unternehmen" in db
+                $DB->execute(
+                    "
+                    INSERT INTO {user_info_data} (userid, fieldid, data)
+                    SELECT ?, uif.id, ?
+                    FROM {user_info_field} uif
+                    WHERE uif.name LIKE ?
+                    ON DUPLICATE KEY UPDATE data = ?",
+                    array($user->id, $newData, $infoFieldNameEnterprise, $newData)                );
+                echo "User " . $email . ": Profilfelder wurde erfolgreich geupdated.<br/>";
+            }
+
+            $user_csv_data .= "\n" . $username . "," . $vorname . "," . $nachname  . "," . $email . "," .  $maildata .  "," . "automatisch" . "," . $moodle_kurs . "," . $group_name . "," . $maildata;
         }
     }
     return $user_csv_data;

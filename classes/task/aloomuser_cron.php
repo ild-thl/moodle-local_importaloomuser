@@ -36,23 +36,22 @@ require_once($CFG->dirroot . '/cohort/lib.php');
 require_once($CFG->libdir . '/csvlib.class.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
 require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/user_form.php');
-require_once($CFG->libdir . '/clilib.php');
-require_once($CFG->libdir . '/csvlib.class.php');
-require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
 require_once($CFG->dirroot . '/local/importaloomuser/user_form.php');
-require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->dirroot . '/local/importaloomuser/locallib.php');
+require_once($CFG->libdir . '/clilib.php');
 
-//use local CA-certificate
- 
+
 if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.'); // It must be included from a Moodle page.
 }
 
-require_once($CFG->libdir . '/clilib.php');
-//require_once($CFG->dirroot . '/local/importaloomuser/config.php');
 
-
+/**
+ * Class aloomuser_cron
+ * 
+ * This class represents a scheduled task for importing Aloom users in Moodle.
+ * It extends the \core\task\scheduled_task class.
+ */
 class aloomuser_cron extends \core\task\scheduled_task
 {
 
@@ -62,6 +61,10 @@ class aloomuser_cron extends \core\task\scheduled_task
     }
 
 
+    /**
+     * Executes the task.
+     * This method starts the process to import Aloom user data.
+     */
     public function execute()
     {
         start_process(get_aloom_data());
@@ -69,8 +72,13 @@ class aloomuser_cron extends \core\task\scheduled_task
 }
 
 
+/**
+ * Retrieves Aloom data from the database and external API.
+ *
+ * @return string The CSV data containing user information.
+ */
 function get_aloom_data()
-{    
+{
     global $DB, $CFG;
     //check value for aloom-connection in db
     if ($DB->get_records('config')) {
@@ -78,13 +86,11 @@ function get_aloom_data()
         $token = strval($DB->get_record('config', ['name' => 'local_importaloomuserdb_token'])->value);
 
         $event_id = strval($DB->get_record('config', ['name' => 'local_importaloomuser_event_id'])->value);
+    } else {
+        echo ("No data received using provided id and token");
+        die();
+    }
 
-    }
-    else {
-        echo("No data received using provided id and token"); 
-        die(); 
-    }
-    
 
 
     $headers = array();
@@ -105,15 +111,27 @@ function get_aloom_data()
     $data = json_decode($data);
 
 
-    $result = $data; 
+    /**
+     * Generates a CSV data string based on the given data.
+     *
+     * @param array $data The data to be converted to CSV format.
+     * @return string The CSV data string.
+     */
+    $result = $data;
     $all_group_data = get_all_groups($result);
-    $table_header = "username,firstname,lastname,email,profile_field_unternehmen,course1,group1,cohort1";
+    $table_header = "username,firstname,lastname,email,profile_field_unternehmen,profile_field_userimport,course1,group1,cohort1";
     $csv_data = $table_header;
     $csv_data = $csv_data . user_csv_data($result, $all_group_data);
     return $csv_data;
 }
 
 
+/**
+ * This function starts the process of importing Aloom users from a CSV file.
+ *
+ * @param mixed $data The content of the CSV file.
+ * @return void
+ */
 
 function start_process($data): void
 {
@@ -138,6 +156,15 @@ function start_process($data): void
         print_error('csvloaderror', '', $csvloaderror);
     }
 
+    /**
+     * This code block creates a new instance of the \tool_uploaduser\process class and sets the form data for the process.
+     * It then calls the process() method to start the processing.
+     *
+     * @param \tool_uploaduser\process $process The process object used for uploading Aloom users.
+     * @param stdClass $formdata The form data object containing various settings for the upload process.
+     * @param int $iid The ID of the Aloom instance.
+     * @return void
+     */
     $process = new \tool_uploaduser\process($cir);
 
     $formdata = new stdClass;
